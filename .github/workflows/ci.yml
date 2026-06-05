@@ -338,6 +338,15 @@ jobs:
           name: src_binding${{ env.FEATURES_SUFFIX }}_${{ matrix.config.variant }}_${{ matrix.config.target }}.rs
           path: target/src_binding${{ env.FEATURES_SUFFIX }}_${{ matrix.config.variant }}_${{ matrix.config.target }}.rs
 
+      # get-convex: also persist the static lib as a downloadable artifact so the
+      # release can be assembled even if the gated 'Binary publish' step is a no-op.
+      - name: Upload prebuilt lib artifact
+        if: matrix.config.variant == 'debug' || matrix.config.variant == 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lib_${{ env.LIB_NAME }}${{ env.FEATURES_SUFFIX }}_${{ matrix.config.variant }}_${{ matrix.config.target }}
+          path: target/${{ env.LIB_NAME }}${{ env.FEATURES_SUFFIX }}_${{ matrix.config.variant }}_${{ matrix.config.target }}.${{ env.LIB_EXT }}.gz
+
   build-asan:
     name: asan aarch64-apple-darwin
     runs-on: macos-15
