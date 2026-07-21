@@ -296,6 +296,13 @@ fn build_v8(is_asan: bool) {
 
       if env::var("CARGO_FEATURE_V8_ENABLE_POINTER_COMPRESSION").is_ok() {
         opts.push("v8_enable_pointer_compression=true");
+        // Pointer compression makes V8's GN default pull PartitionAlloc in as
+        // the process-wide malloc (the allocator shim), which exports global
+        // malloc/free that collide with a downstream jemalloc at link time.
+        // Keep the archive allocator-neutral so the consumer owns the global
+        // allocator, matching the non-ptrcomp prebuilts.
+        opts.push("use_allocator_shim=false");
+        opts.push("use_partition_alloc_as_malloc=false");
       } else {
         opts.push("v8_enable_pointer_compression=false");
       }
