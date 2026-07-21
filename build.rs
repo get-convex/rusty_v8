@@ -296,6 +296,12 @@ fn build_v8(is_asan: bool) {
 
       if env::var("CARGO_FEATURE_V8_ENABLE_POINTER_COMPRESSION").is_ok() {
         opts.push("v8_enable_pointer_compression=true");
+        // Multi-cage mode: a 4GB pointer cage per IsolateGroup instead of one
+        // shared cage for the whole process. With the shared cage, every
+        // isolate in the process draws from a single 4GB heap reservation,
+        // which multi-tenant embedders (many isolates per process) exhaust.
+        // v8__Isolate__New puts each isolate in its own group.
+        opts.push("v8_enable_pointer_compression_shared_cage=false");
         // Pointer compression makes V8's GN default pull PartitionAlloc in as
         // the process-wide malloc (the allocator shim), which exports global
         // malloc/free that collide with a downstream jemalloc at link time.

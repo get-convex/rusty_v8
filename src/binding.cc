@@ -160,6 +160,16 @@ void v8__V8__SetFatalErrorHandler(v8::V8FatalErrorCallback that) {
 }
 
 v8::Isolate* v8__Isolate__New(const v8::Isolate::CreateParams& params) {
+  // In multi-cage builds (pointer compression with
+  // v8_enable_pointer_compression_shared_cage=false), give each isolate its
+  // own IsolateGroup so it gets a private 4GB pointer cage; the default group
+  // would make every isolate share one 4GB cage. The isolate holds a
+  // reference to its group, so the temporary handle may be dropped. In
+  // single-group builds Create() would abort, so fall back to the default
+  // group there.
+  if (v8::IsolateGroup::CanCreateNewGroups()) {
+    return v8::Isolate::New(v8::IsolateGroup::Create(), params);
+  }
   return v8::Isolate::New(params);
 }
 
