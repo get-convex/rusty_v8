@@ -302,6 +302,12 @@ fn build_v8(is_asan: bool) {
         // which multi-tenant embedders (many isolates per process) exhaust.
         // v8__Isolate__New puts each isolate in its own group.
         opts.push("v8_enable_pointer_compression_shared_cage=false");
+        // GN defaults external code space OFF for multi-cage, which places
+        // code pages inside the cage reservation; on macOS arm64 those pages
+        // lack MAP_JIT and mksnapshot dies making them executable. Keep code
+        // in a separate per-group MAP_JIT'd CodeRange (also what
+        // denoland/rusty_v8#1695 requires for isolate groups).
+        opts.push("v8_enable_external_code_space=true");
         // Pointer compression makes V8's GN default pull PartitionAlloc in as
         // the process-wide malloc (the allocator shim), which exports global
         // malloc/free that collide with a downstream jemalloc at link time.
